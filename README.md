@@ -1,12 +1,6 @@
 # upgrade_local_dss_instance
 
-Upgrades all local Dataiku DSS nodes to the latest public release in one command. It:
-
-1. Fetches the latest version number from `downloads.dataiku.com`
-2. Downloads and extracts the installer
-3. Stops → upgrades → restarts each node
-4. Rebuilds the Docker base image (`linux/amd64`) on each node
-5. Cleans up old installer files
+Manage local Dataiku DSS installations from a single script: upgrade existing nodes, install specific versions, and remove installations you no longer need.
 
 Works on macOS and Linux. On Apple Silicon Macs it automatically runs under Rosetta (`x86_64`).
 
@@ -15,47 +9,73 @@ Works on macOS and Linux. On Apple Silicon Macs it automatically runs under Rose
 ## Prerequisites
 
 - `curl` and `tar` (standard on macOS/Linux)
-- Docker (only needed for the Docker image rebuild step)
-- Dataiku DSS already installed on at least one local node
+- Docker (only needed for the Docker image rebuild step in `upgrade`)
+- Dataiku DSS already installed for `upgrade`; not required for `install`
 
 ---
 
 ## Quick start
 
 ```bash
-# 1. Clone
 git clone https://github.com/VanDerVinz/upgrade_local_dss_instance.git
 cd upgrade_local_dss_instance
+bash dss.sh <command>
+```
 
-# 2. Run (uses built-in defaults — edit the CONFIGURATION section in the script for permanent changes)
-bash upgrade_dss.sh
+---
+
+## Commands
+
+### `upgrade`
+
+Upgrades all configured nodes to the latest public DSS release. For each node it stops DSS, runs the upgrade installer, restarts, and rebuilds the Docker base image. Old installer files are cleaned up at the end.
+
+```bash
+bash dss.sh upgrade
+```
+
+### `install <version>`
+
+Downloads and installs a specific DSS version to its own directory (`~/dss/dss_<version>`). This is a fresh install — it does not touch any existing node.
+
+```bash
+bash dss.sh install 14.5.1
+```
+
+The instance is not started automatically. Once the installer finishes it prints the start/stop commands.
+
+### `remove <version>`
+
+Stops DSS (if running) and deletes the installation directory for a given version.
+
+```bash
+bash dss.sh remove 14.5.1
 ```
 
 ---
 
 ## Configuration
 
-Two variables control the script. Both have built-in defaults you can edit directly in the `CONFIGURATION` block at the top of `upgrade_dss.sh`, or override at runtime via env vars — no file editing needed.
+All variables have built-in defaults. Edit them in the `CONFIGURATION` block at the top of `dss.sh`, or pass them as env vars at runtime — no permanent file editing needed.
 
 | Variable | What it controls | Default |
 |---|---|---|
-| `DSS_VERSIONS_DIR` | Directory where the installer is downloaded and extracted | `~/dss/dss_13/dss_versions` |
-| `DSS_NODES_LIST` | Colon-separated list of node directories to upgrade, in order | Four nodes under `~/dss/dss_13/` |
+| `DSS_BASE_DIR` | Base directory for new installs | `~/dss` |
+| `DSS_VERSIONS_DIR` | Where installers are downloaded and extracted | `~/dss/installers` |
+| `DSS_INSTALL_PORT` | TCP port used when installing a new instance | `10000` |
+| `DSS_NODES_LIST` | Colon-separated node paths for `upgrade`, in dependency order | Four nodes under `~/dss/dss_13/` |
 
 ### Override examples
 
 ```bash
-# Custom versions directory
-DSS_VERSIONS_DIR=~/my/dss/installers bash upgrade_dss.sh
+# Upgrade with a custom node list
+DSS_NODES_LIST="${HOME}/dss/design:${HOME}/dss/automation" bash dss.sh upgrade
 
-# Custom node list (colon-separated, full paths)
-DSS_NODES_LIST="${HOME}/dss/design:${HOME}/dss/automation" bash upgrade_dss.sh
+# Install to a custom base directory on a specific port
+DSS_BASE_DIR=~/my/dss DSS_INSTALL_PORT=10001 bash dss.sh install 14.5.1
 
-# Both at once
-DSS_VERSIONS_DIR=~/installers \
-DSS_NODES_LIST="${HOME}/dss/design:${HOME}/dss/automation" \
-bash upgrade_dss.sh
+# Remove an install from a custom base directory
+DSS_BASE_DIR=~/my/dss bash dss.sh remove 14.5.1
 ```
 
-Paths that don't exist are silently skipped, so it's safe to leave extra nodes in the list.
-
+Paths that don't exist are silently skipped in `upgrade`, so it's safe to leave extra nodes in the list.
