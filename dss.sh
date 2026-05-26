@@ -279,8 +279,11 @@ cmd_install() {
   "${INSTALLER}" -d "${INSTALL_DIR}" -p "${PORT}" \
     || { rm -rf "${INSTALL_DIR}"; die "Installation failed."; }
 
-  log "✅ DSS ${VERSION} installed at ${INSTALL_DIR} on port ${PORT}"
-  log "   Start:  ${INSTALL_DIR}/bin/dss start"
+  log "Starting DSS ${VERSION}…"
+  "${INSTALL_DIR}/bin/dss" start \
+    || log "⚠️  Start may have failed. Check manually."
+
+  log "✅ DSS ${VERSION} installed and running at ${INSTALL_DIR} on port ${PORT}"
   log "   Stop:   ${INSTALL_DIR}/bin/dss stop"
   log "   Remove: bash dss.sh remove ${VERSION}"
 }

@@ -17,7 +17,7 @@ Works on macOS and Linux. On Apple Silicon Macs it automatically runs under Rose
 ## Quick start
 
 ```bash
-git clone https://github.com/VanDerVinz/upgrade_local_dss_instance.git
+git clone https://github.com/VanDerVinz/manage-dss-local-instance-version.git
 cd upgrade_local_dss_instance
 bash dss.sh <command>
 ```
