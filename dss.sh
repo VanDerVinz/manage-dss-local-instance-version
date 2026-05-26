@@ -63,6 +63,19 @@ esac
 log() { echo "[$(date '+%H:%M:%S')] $*"; }
 die() { echo "❌ ERROR: $*" >&2; exit 1; }
 
+# Sets AVAILABLE_PORT to the first free TCP port at or above the given port.
+AVAILABLE_PORT=""
+find_available_port() {
+  local port="$1"
+  for (( ; port <= 65535; port++ )); do
+    if ! nc -z localhost "${port}" 2>/dev/null; then
+      AVAILABLE_PORT="${port}"
+      return 0
+    fi
+  done
+  die "Could not find a free port starting from $1."
+}
+
 # ── Shared: download and extract a DSS version installer ─────────────────────
 # Sets the global FETCHED_INSTALLER_DIR to the unpacked installer path.
 FETCHED_INSTALLER_DIR=""
@@ -246,7 +259,15 @@ cmd_install() {
     exit 1
   fi
 
-  log "Installing DSS ${VERSION} → ${INSTALL_DIR} (port ${DSS_INSTALL_PORT})…"
+  find_available_port "${DSS_INSTALL_PORT}"
+  local PORT="${AVAILABLE_PORT}"
+  if [[ "${PORT}" != "${DSS_INSTALL_PORT}" ]]; then
+    log "⚠️  Port ${DSS_INSTALL_PORT} is already in use — using port ${PORT} instead."
+  else
+    log "Port ${PORT} is available."
+  fi
+
+  log "Installing DSS ${VERSION} → ${INSTALL_DIR} (port ${PORT})…"
 
   fetch_installer "${VERSION}"
   local INSTALLER="${FETCHED_INSTALLER_DIR}/installer.sh"
@@ -255,10 +276,10 @@ cmd_install() {
   mkdir -p "${INSTALL_DIR}"
 
   log "Running installer…"
-  "${INSTALLER}" -d "${INSTALL_DIR}" -p "${DSS_INSTALL_PORT}" \
+  "${INSTALLER}" -d "${INSTALL_DIR}" -p "${PORT}" \
     || { rm -rf "${INSTALL_DIR}"; die "Installation failed."; }
 
-  log "✅ DSS ${VERSION} installed at ${INSTALL_DIR}"
+  log "✅ DSS ${VERSION} installed at ${INSTALL_DIR} on port ${PORT}"
   log "   Start:  ${INSTALL_DIR}/bin/dss start"
   log "   Stop:   ${INSTALL_DIR}/bin/dss stop"
   log "   Remove: bash dss.sh remove ${VERSION}"
