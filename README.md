@@ -59,8 +59,3 @@ bash upgrade_dss.sh
 
 Paths that don't exist are silently skipped, so it's safe to leave extra nodes in the list.
 
----
-
-## Raycast
-
-Add the script to your [Raycast Scripts Directory](https://manual.raycast.com/script-commands) — the metadata headers at the top of the file are picked up automatically. The script appears as **"Upgrade DSS"** in the `Dataiku DSS` package.

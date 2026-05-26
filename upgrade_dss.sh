@@ -2,18 +2,9 @@
 #
 # upgrade_dss.sh — Upgrade all local DSS nodes to the latest public release.
 #
-# Usage (plain terminal):  bash upgrade_dss.sh
-# Usage (Raycast):         add to your Raycast scripts directory — headers below are picked up automatically.
+# Usage: bash upgrade_dss.sh
 #
 # Edit the CONFIGURATION section below, then run. No other changes needed.
-
-# ── Raycast metadata (ignored when running outside Raycast) ───────────────────
-# @raycast.schemaVersion 1
-# @raycast.title Upgrade DSS
-# @raycast.mode fullOutput
-# @raycast.icon 🚀
-# @raycast.packageName Dataiku DSS
-# @raycast.description Fetches the latest DSS version, downloads it, untars it, removes quarantine attributes, runs the upgrade installer, then rebuilds the Docker base image.
 
 # ── Architecture: ensure we run under x86_64 (Intel/Rosetta) ─────────────────
 if [[ "$(uname -m)" != "x86_64" ]]; then
@@ -22,7 +13,6 @@ fi
 
 set -euo pipefail
 
-# Raycast runs with a stripped environment — restore a usable PATH.
 export PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:${PATH}"
 
 # ═══════════════════════════════════════════════════════════════════════════════
