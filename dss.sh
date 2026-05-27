@@ -308,18 +308,25 @@ cmd_install() {
 
   mkdir -p "${INSTALL_DIR}"
 
-  # DSS_SKIP_DEPS=true skips the OS/Java dependency check (-n flag).
-  # Useful on Apple Silicon where system Java is arm64 but the installer runs
-  # under Rosetta — DSS bundles its own JRE so the check is not needed.
-  local INSTALLER_EXTRA_FLAGS=()
-  if [[ "${DSS_SKIP_DEPS:-false}" == "true" ]]; then
-    log "Skipping dependency check (DSS_SKIP_DEPS=true)."
-    INSTALLER_EXTRA_FLAGS+=( -n )
-  fi
-
   log "Running installer…"
-  "${INSTALLER}" -d "${INSTALL_DIR}" -p "${PORT}" "${INSTALLER_EXTRA_FLAGS[@]}" \
-    || { rm -rf "${INSTALL_DIR}"; die "Installation failed."; }
+  if [[ "$(uname -s)" == "Darwin" ]]; then
+    # This script runs under Rosetta (x86_64), but system Java is arm64-only.
+    # Run the installer natively (arm64) so it can locate the arm64 JVM.
+    # The installed DSS uses its own bundled JRE at runtime, so this is only
+    # needed for the install step itself.
+    local JAVA_HOME_NATIVE
+    JAVA_HOME_NATIVE="$(/usr/libexec/java_home 2>/dev/null)" || true
+    if [[ -n "${JAVA_HOME_NATIVE}" ]]; then
+      log "Running installer as arm64 with JAVA_HOME=${JAVA_HOME_NATIVE}"
+    fi
+    JAVA_HOME="${JAVA_HOME_NATIVE}" \
+      /usr/bin/arch -arm64 /bin/bash "${INSTALLER}" \
+        -d "${INSTALL_DIR}" -p "${PORT}" \
+      || { rm -rf "${INSTALL_DIR}"; die "Installation failed."; }
+  else
+    "${INSTALLER}" -d "${INSTALL_DIR}" -p "${PORT}" \
+      || { rm -rf "${INSTALL_DIR}"; die "Installation failed."; }
+  fi
 
   # Some older installers exit 0 even when they fail (e.g. unsupported OS / missing Java).
   # Verify the install actually completed by checking for the control script.
