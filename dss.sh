@@ -76,6 +76,37 @@ find_available_port() {
   die "Could not find a free port starting from $1."
 }
 
+# ── Shared: ensure Docker daemon is running ───────────────────────────────────
+ensure_docker_running() {
+  if docker info &>/dev/null; then
+    log "Docker is already running."
+    return 0
+  fi
+
+  log "Docker is not running — starting it now…"
+  case "$(uname -s)" in
+    Darwin)
+      open -a Docker
+      ;;
+    Linux)
+      sudo systemctl start docker 2>/dev/null \
+        || sudo service docker start 2>/dev/null \
+        || die "Could not start Docker. Start it manually and retry."
+      ;;
+  esac
+
+  log "Waiting for Docker to become ready…"
+  local attempts=0
+  while ! docker info &>/dev/null; do
+    attempts=$(( attempts + 1 ))
+    if [[ "${attempts}" -ge 30 ]]; then
+      die "Docker did not become ready within 60 seconds. Start Docker manually and retry."
+    fi
+    sleep 2
+  done
+  log "Docker is ready."
+}
+
 # ── Shared: download and extract a DSS version installer ─────────────────────
 # Sets the global FETCHED_INSTALLER_DIR to the unpacked installer path.
 FETCHED_INSTALLER_DIR=""
@@ -195,6 +226,8 @@ upgrade_node() {
 }
 
 cmd_upgrade() {
+  ensure_docker_running
+
   log "Fetching version list from downloads.dataiku.com…"
   local LATEST_VERSION
   LATEST_VERSION=$(
