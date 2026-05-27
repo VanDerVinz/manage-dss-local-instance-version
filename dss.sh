@@ -312,6 +312,13 @@ cmd_install() {
   "${INSTALLER}" -d "${INSTALL_DIR}" -p "${PORT}" \
     || { rm -rf "${INSTALL_DIR}"; die "Installation failed."; }
 
+  # Some older installers exit 0 even when they fail (e.g. unsupported OS / missing Java).
+  # Verify the install actually completed by checking for the control script.
+  if [[ ! -x "${INSTALL_DIR}/bin/dss" ]]; then
+    rm -rf "${INSTALL_DIR}"
+    die "Installer exited without error but DSS was not fully installed. The OS or Java version may not be supported by DSS ${VERSION}."
+  fi
+
   log "Starting DSS ${VERSION}…"
   "${INSTALL_DIR}/bin/dss" start \
     || log "⚠️  Start may have failed. Check manually."
