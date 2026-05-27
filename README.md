@@ -64,6 +64,7 @@ All variables have built-in defaults. Edit them in the `CONFIGURATION` block at 
 | `DSS_VERSIONS_DIR` | Where installers are downloaded and extracted | `~/dss/installers` |
 | `DSS_INSTALL_PORT` | TCP port used when installing a new instance | `10000` |
 | `DSS_NODES_LIST` | Colon-separated node paths for `upgrade`, in dependency order | Four nodes under `~/dss/dss_13/` |
+| `DSS_SKIP_DEPS` | Set to `true` to skip the OS/Java dependency check during `install` (useful on Apple Silicon where system Java is arm64 but DSS bundles its own JRE) | `false` |
 
 ### Override examples
 

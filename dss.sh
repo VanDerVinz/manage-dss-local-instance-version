@@ -308,8 +308,17 @@ cmd_install() {
 
   mkdir -p "${INSTALL_DIR}"
 
+  # DSS_SKIP_DEPS=true skips the OS/Java dependency check (-n flag).
+  # Useful on Apple Silicon where system Java is arm64 but the installer runs
+  # under Rosetta — DSS bundles its own JRE so the check is not needed.
+  local INSTALLER_EXTRA_FLAGS=()
+  if [[ "${DSS_SKIP_DEPS:-false}" == "true" ]]; then
+    log "Skipping dependency check (DSS_SKIP_DEPS=true)."
+    INSTALLER_EXTRA_FLAGS+=( -n )
+  fi
+
   log "Running installer…"
-  "${INSTALLER}" -d "${INSTALL_DIR}" -p "${PORT}" \
+  "${INSTALLER}" -d "${INSTALL_DIR}" -p "${PORT}" "${INSTALLER_EXTRA_FLAGS[@]}" \
     || { rm -rf "${INSTALL_DIR}"; die "Installation failed."; }
 
   # Some older installers exit 0 even when they fail (e.g. unsupported OS / missing Java).
