@@ -314,8 +314,12 @@ cmd_install() {
     # Run the installer natively (arm64) so it can locate the arm64 JVM.
     # The installed DSS uses its own bundled JRE at runtime, so this is only
     # needed for the install step itself.
+    # Prefer Java 11, then 8, then whatever is available — older DSS versions
+    # reject Java 17+ even though it mostly works, so we pick the best match.
     local JAVA_HOME_NATIVE
-    JAVA_HOME_NATIVE="$(/usr/libexec/java_home 2>/dev/null)" || true
+    JAVA_HOME_NATIVE="$( /usr/libexec/java_home -v 11 2>/dev/null \
+      || /usr/libexec/java_home -v 1.8 2>/dev/null \
+      || /usr/libexec/java_home 2>/dev/null )" || true
     if [[ -n "${JAVA_HOME_NATIVE}" ]]; then
       log "Running installer as arm64 with JAVA_HOME=${JAVA_HOME_NATIVE}"
     fi
