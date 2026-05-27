@@ -19,36 +19,27 @@ set -euo pipefail
 export PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:${PATH}"
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# CONFIGURATION — edit the defaults below, or override any value via env vars
-# before running (env vars take precedence over the defaults here).
+# CONFIGURATION — the only section you need to edit
 # ═══════════════════════════════════════════════════════════════════════════════
 
-# Base directory where new DSS installations are created.
-# Override: DSS_BASE_DIR=~/my/dss bash dss.sh install 14.5.1
-DSS_BASE_DIR="${DSS_BASE_DIR:-${HOME}/dss}"
+# Where new DSS installations are created (one sub-folder per version).
+DSS_BASE_DIR="${HOME}/dss"
 
-# Directory where DSS installers are downloaded and extracted.
-# Override: DSS_VERSIONS_DIR=~/my/installers bash dss.sh upgrade
-DSS_VERSIONS_DIR="${DSS_VERSIONS_DIR:-${DSS_BASE_DIR}/installers}"
+# Where DSS installers are downloaded and extracted.
+DSS_VERSIONS_DIR="${DSS_BASE_DIR}/installers"
 
 # TCP port used when installing a new DSS instance (install command only).
-# Override: DSS_INSTALL_PORT=10001 bash dss.sh install 14.5.1
-DSS_INSTALL_PORT="${DSS_INSTALL_PORT:-10000}"
+# The script automatically picks the next free port if this one is already taken.
+DSS_INSTALL_PORT=10000
 
-# Nodes to upgrade, in dependency order (upgrade command only).
-# Paths that don't exist are skipped automatically.
-# Override via a colon-separated list:
-#   DSS_NODES_LIST="${HOME}/dss/node1:${HOME}/dss/node2" bash dss.sh upgrade
-if [[ -n "${DSS_NODES_LIST:-}" ]]; then
-  IFS=':' read -ra DSS_NODES <<< "${DSS_NODES_LIST}"
-else
-  DSS_NODES=(
-    "${HOME}/dss/dss_13/design_intel_v6"
-    "${HOME}/dss/dss_13/deployer"
-    "${HOME}/dss/dss_13/automation_prod"
-    "${HOME}/dss/dss_13/automation_test"
-  )
-fi
+# Nodes to upgrade, in order (upgrade command only).
+# Paths that don't exist are skipped automatically — safe to leave extras in the list.
+DSS_NODES=(
+  "${HOME}/dss/dss_13/design_intel_v6"
+  "${HOME}/dss/dss_13/deployer"
+  "${HOME}/dss/dss_13/automation_prod"
+  "${HOME}/dss/dss_13/automation_test"
+)
 
 # ═══════════════════════════════════════════════════════════════════════════════
 
@@ -355,11 +346,7 @@ usage() {
   echo "  install <version>    Install DSS <version> to ${DSS_BASE_DIR}/dss_<version>"
   echo "  remove  <version>    Stop and delete the installation at ${DSS_BASE_DIR}/dss_<version>"
   echo ""
-  echo "Env var overrides (all optional):"
-  echo "  DSS_BASE_DIR         Base directory for installs       (default: ~/dss)"
-  echo "  DSS_VERSIONS_DIR     Directory for downloaded installers (default: ~/dss/installers)"
-  echo "  DSS_INSTALL_PORT     TCP port for fresh installs        (default: 10000)"
-  echo "  DSS_NODES_LIST       Colon-separated node paths for upgrade"
+  echo "Edit the CONFIGURATION block at the top of this script to set your paths and nodes."
   exit 1
 }
 

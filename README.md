@@ -42,7 +42,7 @@ Downloads and installs a specific DSS version to its own directory (`~/dss/dss_<
 bash dss.sh install 14.5.1
 ```
 
-The instance is not started automatically. Once the installer finishes it prints the start/stop commands.
+The instance starts automatically once installed.
 
 ### `remove <version>`
 
@@ -56,26 +56,13 @@ bash dss.sh remove 14.5.1
 
 ## Configuration
 
-All variables have built-in defaults. Edit them in the `CONFIGURATION` block at the top of `dss.sh`, or pass them as env vars at runtime — no permanent file editing needed.
+Open `dss.sh` and edit the `CONFIGURATION` block at the top — that's the only section you need to touch.
 
 | Variable | What it controls | Default |
 |---|---|---|
-| `DSS_BASE_DIR` | Base directory for new installs | `~/dss` |
-| `DSS_VERSIONS_DIR` | Where installers are downloaded and extracted | `~/dss/installers` |
-| `DSS_INSTALL_PORT` | TCP port used when installing a new instance | `10000` |
-| `DSS_NODES_LIST` | Colon-separated node paths for `upgrade`, in dependency order | Four nodes under `~/dss/dss_13/` |
+| `DSS_BASE_DIR` | Where new DSS installations are created | `~/dss` |
+| `DSS_VERSIONS_DIR` | Where installers are downloaded | `~/dss/installers` |
+| `DSS_INSTALL_PORT` | TCP port for new installations | `10000` (auto-increments if taken) |
+| `DSS_NODES` | List of node directories to upgrade, in order | Four nodes under `~/dss/dss_13/` |
 
-### Override examples
-
-```bash
-# Upgrade with a custom node list
-DSS_NODES_LIST="${HOME}/dss/design:${HOME}/dss/automation" bash dss.sh upgrade
-
-# Install to a custom base directory on a specific port
-DSS_BASE_DIR=~/my/dss DSS_INSTALL_PORT=10001 bash dss.sh install 14.5.1
-
-# Remove an install from a custom base directory
-DSS_BASE_DIR=~/my/dss bash dss.sh remove 14.5.1
-```
-
-Paths that don't exist are silently skipped in `upgrade`, so it's safe to leave extra nodes in the list.
+Paths in `DSS_NODES` that don't exist are silently skipped, so it's safe to leave extras in the list.
