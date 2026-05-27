@@ -125,8 +125,8 @@ fetch_installer() {
   else
     if [[ ! -f "${ARCHIVE_PATH}" ]]; then
       log "Downloading ${ARCHIVE_NAME}…"
-      curl -L --progress-bar "${BASE_URL}/${VERSION}/${ARCHIVE_NAME}" -o "${ARCHIVE_PATH}" \
-        || die "Download failed for version ${VERSION}. Check the version number."
+      curl -fL --progress-bar "${BASE_URL}/${VERSION}/${ARCHIVE_NAME}" -o "${ARCHIVE_PATH}" \
+        || { rm -f "${ARCHIVE_PATH}"; die "Download failed for version ${VERSION}. Check the version number and that it exists on downloads.dataiku.com."; }
       log "Download complete → ${ARCHIVE_PATH}"
     else
       log "Archive already exists, skipping download: ${ARCHIVE_PATH}"
