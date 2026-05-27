@@ -309,34 +309,13 @@ cmd_install() {
   mkdir -p "${INSTALL_DIR}"
 
   log "Running installer…"
-  if [[ "$(uname -s)" == "Darwin" ]]; then
-    # This script runs under Rosetta (x86_64), but system Java is arm64-only.
-    # Run the installer natively (arm64) so it can locate the arm64 JVM.
-    # The installed DSS uses its own bundled JRE at runtime, so this is only
-    # needed for the install step itself.
-    # Prefer Java 11, then 8, then whatever is available — older DSS versions
-    # reject Java 17+ even though it mostly works, so we pick the best match.
-    local JAVA_HOME_NATIVE
-    JAVA_HOME_NATIVE="$( /usr/libexec/java_home -v 11 2>/dev/null \
-      || /usr/libexec/java_home -v 1.8 2>/dev/null \
-      || /usr/libexec/java_home 2>/dev/null )" || true
-    if [[ -n "${JAVA_HOME_NATIVE}" ]]; then
-      log "Running installer as arm64 with JAVA_HOME=${JAVA_HOME_NATIVE}"
-    fi
-    JAVA_HOME="${JAVA_HOME_NATIVE}" \
-      /usr/bin/arch -arm64 /bin/bash "${INSTALLER}" \
-        -d "${INSTALL_DIR}" -p "${PORT}" \
-      || { rm -rf "${INSTALL_DIR}"; die "Installation failed."; }
-  else
-    "${INSTALLER}" -d "${INSTALL_DIR}" -p "${PORT}" \
-      || { rm -rf "${INSTALL_DIR}"; die "Installation failed."; }
-  fi
+  "${INSTALLER}" -d "${INSTALL_DIR}" -p "${PORT}" \
+    || { rm -rf "${INSTALL_DIR}"; die "Installation failed. This version of DSS may not be compatible with your OS, Java, or Python version."; }
 
-  # Some older installers exit 0 even when they fail (e.g. unsupported OS / missing Java).
-  # Verify the install actually completed by checking for the control script.
+  # Some installers exit 0 even on partial failure. Verify the control script exists.
   if [[ ! -x "${INSTALL_DIR}/bin/dss" ]]; then
     rm -rf "${INSTALL_DIR}"
-    die "Installer exited without error but DSS was not fully installed. The OS or Java version may not be supported by DSS ${VERSION}."
+    die "Installer completed but DSS was not fully set up. This version may not be compatible with your system."
   fi
 
   log "Starting DSS ${VERSION}…"
